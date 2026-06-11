@@ -1,0 +1,6 @@
+{
+  "name": "Personal Dashboard",
+  "description": "A comprehensive personal dashboard for tracking tasks, overtime, finances, calendar events, notes, and anime watch progress.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
