@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Bill } from '../types';
 import { useAppContext } from '../AppContext';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, Trash2, Check, AlertTriangle, Target, Wallet } from 'lucide-react';
 import { formatCurrency } from '../utils';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -15,10 +15,54 @@ export default function FinanceView() {
   const [billAmount, setBillAmount] = useState('');
   const [billDate, setBillDate] = useState('');
 
-  const updateFinance = (key: 'bankBalance' | 'homeGoal', val: string) => {
-    const num = parseFloat(val) || 0;
-    setFinance(prev => ({ ...prev, [key]: num }));
+  const formatMoneyInput = (value: number) => {
+    if (!value) return '';
+    return new Intl.NumberFormat('en-PH', { maximumFractionDigits: 2 }).format(value);
   };
+
+  const normalizeMoneyInput = (raw: string) => {
+    const cleaned = raw.replace(/[^\d.,]/g, '');
+    const noCommas = cleaned.replace(/,/g, '');
+
+    if (noCommas === '' || noCommas === '.') {
+      return { display: '', value: 0 };
+    }
+
+    const endsWithDot = noCommas.endsWith('.');
+    const parts = noCommas.split('.');
+    const rawInt = parts[0] === '' ? '0' : parts[0];
+    const rawDec = parts[1] ?? '';
+    const dec = rawDec.slice(0, 2);
+
+    const intNum = Number(rawInt) || 0;
+    const formattedInt = new Intl.NumberFormat('en-PH', { maximumFractionDigits: 0 }).format(intNum);
+
+    const display = endsWithDot
+      ? `${formattedInt}.`
+      : dec.length > 0
+        ? `${formattedInt}.${dec}`
+        : formattedInt;
+
+    const numericStr = endsWithDot ? rawInt : dec.length > 0 ? `${rawInt}.${dec}` : rawInt;
+    const value = Number.isFinite(Number(numericStr)) ? Number(numericStr) : 0;
+
+    return { display, value };
+  };
+
+  const updateFinance = (key: 'bankBalance' | 'homeGoal', val: number) => {
+    setFinance(prev => ({ ...prev, [key]: val }));
+  };
+
+  const [bankBalanceInput, setBankBalanceInput] = useState(() => formatMoneyInput(finance.bankBalance));
+  const [homeGoalInput, setHomeGoalInput] = useState(() => formatMoneyInput(finance.homeGoal));
+
+  useEffect(() => {
+    setBankBalanceInput(formatMoneyInput(finance.bankBalance));
+  }, [finance.bankBalance]);
+
+  useEffect(() => {
+    setHomeGoalInput(formatMoneyInput(finance.homeGoal));
+  }, [finance.homeGoal]);
 
   const addBill = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,9 +130,14 @@ export default function FinanceView() {
             <div className="relative group">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-medium font-sans">₱</span>
               <input 
-                type="number" 
-                value={finance.bankBalance || ''} 
-                onChange={e => updateFinance('bankBalance', e.target.value)}
+                type="text"
+                inputMode="decimal"
+                value={bankBalanceInput}
+                onChange={e => {
+                  const next = normalizeMoneyInput(e.target.value);
+                  setBankBalanceInput(next.display);
+                  updateFinance('bankBalance', next.value);
+                }}
                 className="w-full bg-slate-50/50 font-medium text-2xl border border-transparent rounded-2xl pl-10 pr-4 py-4 outline-none focus:bg-white focus:border-blue-100 focus:ring-4 focus:ring-blue-50 text-slate-800 transition-all font-sans"
               />
             </div>
@@ -100,9 +149,14 @@ export default function FinanceView() {
             <div className="relative group">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-medium font-sans">₱</span>
               <input 
-                type="number" 
-                value={finance.homeGoal || ''} 
-                onChange={e => updateFinance('homeGoal', e.target.value)}
+                type="text"
+                inputMode="decimal"
+                value={homeGoalInput}
+                onChange={e => {
+                  const next = normalizeMoneyInput(e.target.value);
+                  setHomeGoalInput(next.display);
+                  updateFinance('homeGoal', next.value);
+                }}
                 className="w-full bg-slate-50/50 font-medium text-2xl border border-transparent rounded-2xl pl-10 pr-4 py-4 outline-none focus:bg-white focus:border-blue-100 focus:ring-4 focus:ring-blue-50 text-slate-800 transition-all font-sans"
               />
             </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../AppContext';
 import { Anime, AnimeStatus } from '../types';
-import { Plus, Trash2, Star, PlayCircle, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Star, PlayCircle, Image as ImageIcon, ExternalLink } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export default function AnimeView() {
@@ -13,7 +13,7 @@ export default function AnimeView() {
   const [episodesWatched, setEpisodesWatched] = useState<number | ''>('');
   const [totalEpisodes, setTotalEpisodes] = useState<number | ''>('');
   const [rating, setRating] = useState<number | ''>('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
   const [showForm, setShowForm] = useState(false);
 
   const addAnime = (e: React.FormEvent) => {
@@ -27,7 +27,7 @@ export default function AnimeView() {
       episodesWatched: Number(episodesWatched) || 0,
       totalEpisodes: totalEpisodes !== '' ? Number(totalEpisodes) : null,
       rating: rating !== '' ? Number(rating) : null,
-      imageUrl: imageUrl.trim() || undefined
+      linkUrl: linkUrl.trim() || undefined
     };
 
     setAnimeList(prev => [...prev, newAnime]);
@@ -38,7 +38,7 @@ export default function AnimeView() {
     setEpisodesWatched('');
     setTotalEpisodes('');
     setRating('');
-    setImageUrl('');
+    setLinkUrl('');
     setShowForm(false);
   };
 
@@ -66,6 +66,14 @@ export default function AnimeView() {
 
   const AnimeCard = ({ anime }: { anime: Anime }) => {
     const progressPercent = anime.totalEpisodes ? (anime.episodesWatched / anime.totalEpisodes) * 100 : 0;
+    const linkLabel = (() => {
+      if (!anime.linkUrl) return null;
+      try {
+        return new URL(anime.linkUrl).hostname.replace(/^www\./, '');
+      } catch {
+        return anime.linkUrl;
+      }
+    })();
     
     return (
       <motion.div 
@@ -86,8 +94,16 @@ export default function AnimeView() {
 
         <div className="flex gap-4">
           <div className="w-20 h-28 shrink-0 bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200">
-            {anime.imageUrl ? (
-              <img src={anime.imageUrl} alt={anime.title} className="w-full h-full object-cover" />
+            {anime.linkUrl ? (
+              <a
+                href={anime.linkUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="p-3 rounded-xl bg-white/70 backdrop-blur border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-colors pointer-events-auto"
+                aria-label="Open anime link"
+              >
+                <ExternalLink size={18} />
+              </a>
             ) : (
               <ImageIcon size={24} className="text-slate-300" />
             )}
@@ -95,6 +111,16 @@ export default function AnimeView() {
           
           <div className="flex flex-col py-1 overflow-hidden">
             <h3 className="font-semibold text-slate-800 text-lg leading-tight mb-1 truncate">{anime.title}</h3>
+            {anime.linkUrl && (
+              <a
+                href={anime.linkUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[10px] font-bold uppercase tracking-widest text-blue-500 hover:text-blue-600 truncate w-full mb-2 pointer-events-auto"
+              >
+                {linkLabel}
+              </a>
+            )}
             
             <div className="flex items-center gap-2 mb-3">
               {anime.rating && (
@@ -182,8 +208,8 @@ export default function AnimeView() {
                   className="w-full bg-slate-50 border border-transparent rounded-2xl px-4 py-3 outline-none focus:bg-white focus:border-blue-100 focus:ring-4 focus:ring-blue-50 text-slate-700 shadow-sm transition-all font-medium" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Image URL (Optional)</label>
-                <input type="url" placeholder="https://..." value={imageUrl} onChange={e => setImageUrl(e.target.value)}
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Anime Link (Optional)</label>
+                <input type="url" placeholder="https://myanimelist.net/..." value={linkUrl} onChange={e => setLinkUrl(e.target.value)}
                   className="w-full bg-slate-50 border border-transparent rounded-2xl px-4 py-3 outline-none focus:bg-white focus:border-blue-100 focus:ring-4 focus:ring-blue-50 text-slate-700 shadow-sm transition-all font-medium" />
               </div>
               <div className="space-y-2">

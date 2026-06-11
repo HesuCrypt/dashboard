@@ -15,6 +15,7 @@ export interface Anime {
   totalEpisodes: number | null;
   status: AnimeStatus;
   rating: number | null;
+  linkUrl?: string;
   imageUrl?: string;
 }
 

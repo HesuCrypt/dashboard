@@ -11,6 +11,7 @@ export default function OvertimeView() {
   const [date, setDate] = useState('');
   const [timeIn, setTimeIn] = useState('');
   const [timeOut, setTimeOut] = useState('');
+  const regularShiftMinutes = 9 * 60;
 
   const calculateMinutes = (start: string, end: string) => {
     if (!start || !end) return 0;
@@ -30,8 +31,8 @@ export default function OvertimeView() {
     if (!date || !timeIn || !timeOut) return;
     
     const totalMinutes = calculateMinutes(timeIn, timeOut);
-    const regularMinutes = 9 * 60;
-    const overtimeMinutes = totalMinutes - regularMinutes;
+    const regularMinutes = Math.min(totalMinutes, regularShiftMinutes);
+    const overtimeMinutes = Math.max(0, totalMinutes - regularShiftMinutes);
 
     const log: OvertimeLog = {
       id: Date.now().toString(),
@@ -57,7 +58,7 @@ export default function OvertimeView() {
   };
 
   const totalAccumulatedOtMinutes = overtimeLogs.reduce((sum, log) => sum + Math.max(0, log.overtimeMinutes), 0);
-  const totalUndertimeMinutes = overtimeLogs.reduce((sum, log) => sum + (log.overtimeMinutes < 0 ? Math.abs(log.overtimeMinutes) : 0), 0);
+  const totalUndertimeMinutes = overtimeLogs.reduce((sum, log) => sum + Math.max(0, regularShiftMinutes - log.totalMinutes), 0);
   const lastEntry = overtimeLogs[0];
 
 

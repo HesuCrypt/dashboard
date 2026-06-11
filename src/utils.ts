@@ -8,8 +8,14 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatTimeExact(minutes: number): string {
-  const h = Math.floor(Math.abs(minutes) / 60);
-  const m = Math.abs(minutes) % 60;
+  const abs = Math.abs(minutes);
+  const h = Math.floor(abs / 60);
+  const m = abs % 60;
   const sign = minutes < 0 ? '-' : '';
-  return `${sign}${h}:${m.toString().padStart(2, '0')} hrs`;
+
+  const parts: string[] = [];
+  if (h > 0) parts.push(`${h} hr${h === 1 ? '' : 's'}`);
+  if (m > 0 || h === 0) parts.push(`${m} min${m === 1 ? '' : 's'}`);
+
+  return `${sign}${parts.join(' ')}`;
 }
